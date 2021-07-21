@@ -4,6 +4,7 @@ from flasgger import Swagger
 from apis.models.model import db
 from apis.healthcheck import healthcheck_blueprint
 from apis.vessels_endpoint import vessels_blueprint
+from apis.equipments_endpoint import equipments_blueprint
 
 
 def create_app(app_name='VESSELS', test_config=False, production_conf=False):
@@ -17,6 +18,7 @@ def create_app(app_name='VESSELS', test_config=False, production_conf=False):
     # Register api blueprints
     app.register_blueprint(healthcheck_blueprint)
     app.register_blueprint(vessels_blueprint, url_prefix='/vessel')
+    app.register_blueprint(equipments_blueprint, url_prefix='/equipment')
 
     db.init_app(app)
 
