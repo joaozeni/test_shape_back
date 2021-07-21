@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+data/
+.vscode
+migrations/
+tests/.pytest_cache/
+venv/
+.DS_Store
+data_files/
