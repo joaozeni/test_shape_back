@@ -9,7 +9,7 @@ from apis.app import create_app
 from apis.models.model import db
 from apis.models.vessel import vessel
 from apis.models.equipment import equipment
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 
 @pytest.fixture(scope="module")
@@ -140,4 +140,33 @@ def test_insert_second_equipment_in_a_different_vessel(app):
         assert query_results[2][0].location == 'china'
         assert query_results[2][0].active
         assert query_results[2][0].name == 'compressor'
+
+def test_update_an_equipment(app):
+    result = app.test_client().put('/equipment/update_equipment_status', json={'code':'5310B9D7'})
+    assert result.get_json().get('message') == 'OK'
+    assert result.status_code == 201
+    with app.app_context():
+        query = db.session.query(equipment).filter(equipment.code=='5310B9D7')
+        query_results = db.session.execute(query).all()
+        assert not query_results[0][0].active
+
+def test_update_an_equipment_without_code(app):
+    result = app.test_client().put('/equipment/update_equipment_status')
+    assert result.get_json().get('message') == 'MISSING_PARAMETER'
+    assert result.status_code == 400
+
+def test_update_an_equipment_not_in_system(app):
+    result = app.test_client().put('/equipment/update_equipment_status', json={'code':'5312B9D5'})
+    assert result.get_json().get('message') == 'NO_CODE'
+    assert result.status_code == 409
+
+def test_update_an_list_of_equipment(app):
+    result = app.test_client().put('/equipment/update_equipment_status', json={'code':['5310B9D8', '5310B9D9']})
+    assert result.get_json().get('message') == 'OK'
+    assert result.status_code == 201
+    with app.app_context():
+        query = db.session.query(equipment).filter(or_(equipment.code=='5310B9D8', equipment.code=='5310B9D9'))
+        query_results = db.session.execute(query).all()
+        assert not query_results[0][0].active
+        assert not query_results[1][0].active
 

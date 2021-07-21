@@ -33,7 +33,7 @@ def insert_equipment():
               required: true
         responses:
           201:
-            description: returns OK if the vessel was correctly inserted
+            description: returns OK if the equipment was correctly inserted
           400:
             description: returns MISSING_PARAMETER if any parameter is not sent
           409:
@@ -61,6 +61,42 @@ def insert_equipment():
 
     equipment_obj = equipment(vessel_id=query_results[0][0], code=code, name=name, location=location, active=True)
     db.session.add(equipment_obj)
+    db.session.commit()
+
+    return {'message':'OK'}, 201
+
+@equipments_blueprint.route('/update_equipment_status', methods=['PUT'])
+def update_equipment_status():
+
+    """Set a equipment or a list of those to inactive
+        ---
+        parameters:
+            - name: code
+              in: body
+              type: string
+              required: true
+        responses:
+          200:
+            description: returns OK if the equipments were correctly updated
+          400:
+            description: returns MISSING_PARAMETER if any parameter is not sent
+          409:
+            description: returns NO_CODE if the equipment code is not already in the system
+    """
+    req_json = request.get_json()
+    if not req_json or not req_json.get('code'):
+        return {'message':'MISSING_PARAMETER'}, 400
+    
+    code = req_json.get('code')
+
+    if type(code) == str:
+        code = [code]
+    
+    equipment_in_the_system = db.session.query(equipment.id).filter(equipment.code.in_(code)).count()
+    if not equipment_in_the_system:
+        return {'message':'NO_CODE'}, 409
+
+    update_equipments = db.session.query(equipment).filter(equipment.code.in_(code)).update({'active':False})
     db.session.commit()
 
     return {'message':'OK'}, 201
