@@ -81,6 +81,42 @@ def test_insert_without_name(app):
         query_results = db.session.execute(query).all()
         assert len(query_results) == 1
 
+def test_insert_wrong_format_vessel_code(app):
+    result = app.test_client().post('/equipment/insert_equipment', json={'vessel_code':1, 'code':'5310B9D7', 'location':'brazil', 'name':'compressor'})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
+    assert result.status_code == 400
+    with app.app_context():
+        query = db.session.query(equipment)
+        query_results = db.session.execute(query).all()
+        assert len(query_results) == 1
+
+def test_insert_wrong_format_code(app):
+    result = app.test_client().post('/equipment/insert_equipment', json={'code':1,'vessel_code':'MV102', 'location':'brazil', 'name':'compressor'})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
+    assert result.status_code == 400
+    with app.app_context():
+        query = db.session.query(equipment)
+        query_results = db.session.execute(query).all()
+        assert len(query_results) == 1
+
+def test_insert_wrong_format_location(app):
+    result = app.test_client().post('/equipment/insert_equipment', json={'location':1,'vessel_code':'MV102', 'code':'5310B9D7', 'name':'compressor'})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
+    assert result.status_code == 400
+    with app.app_context():
+        query = db.session.query(equipment)
+        query_results = db.session.execute(query).all()
+        assert len(query_results) == 1
+
+def test_insert_wrong_format_name(app):
+    result = app.test_client().post('/equipment/insert_equipment', json={'name':1,'vessel_code':'MV102', 'code':'5310B9D7', 'location':'brazil'})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
+    assert result.status_code == 400
+    with app.app_context():
+        query = db.session.query(equipment)
+        query_results = db.session.execute(query).all()
+        assert len(query_results) == 1
+
 def test_insert_replicated(app):
     result = app.test_client().post('/equipment/insert_equipment', json={'vessel_code':'MV102', 'code':'5310B9D7', 'location':'brazil', 'name':'compressor'})
     assert result.get_json().get('message') == 'REPEATED_CODE'
@@ -153,6 +189,11 @@ def test_update_an_equipment(app):
 def test_update_an_equipment_without_code(app):
     result = app.test_client().put('/equipment/update_equipment_status')
     assert result.get_json().get('message') == 'MISSING_PARAMETER'
+    assert result.status_code == 400
+
+def test_update_an_equipment_wrong_format(app):
+    result = app.test_client().put('/equipment/update_equipment_status', json={'code':1})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
     assert result.status_code == 400
 
 def test_update_an_equipment_not_in_system(app):

@@ -35,6 +35,8 @@ def insert_equipment():
             description: returns OK if the equipment was correctly inserted
           400:
             description: returns MISSING_PARAMETER if any parameter is not sent
+          400:
+            description: returns WRONG_FORMAT if any parameter are sent in the wrong format
           409:
             description: returns REPEATED_CODE if the equipment code is already in the system
           409:
@@ -48,6 +50,9 @@ def insert_equipment():
     code = req_json.get('code')
     name = req_json.get('name')
     location = req_json.get('location')
+    
+    if type(vessel_code) != str or type(code) != str or type(name) != str or type(location) != str:
+        return {'message':'WRONG_FORMAT'}, 400
     
     vessel_query = db.session.query(vessel.id).filter(vessel.code==vessel_code)
     query_results = db.session.execute(vessel_query).all()
@@ -78,6 +83,8 @@ def update_equipment_status():
             description: returns OK if the equipments were correctly updated
           400:
             description: returns MISSING_PARAMETER if any parameter is not sent
+          400:
+            description: returns WRONG_FORMAT if any parameter are sent in the wrong format
           409:
             description: returns NO_CODE if the equipment code is not already in the system
     """
@@ -86,6 +93,9 @@ def update_equipment_status():
         return {'message':'MISSING_PARAMETER'}, 400
     
     code = req_json.get('code')
+    
+    if type(code) != str and type(code) != list:
+        return {'message':'WRONG_FORMAT'}, 400
 
     if type(code) == str:
         code = [code]
@@ -113,6 +123,8 @@ def active_equipment():
             description: returns a json with equipments key and a list of equipments
           400:
             description: returns MISSING_PARAMETER if the vessel_code is not sent
+          400:
+            description: returns WRONG_FORMAT if any parameter are sent in the wrong format
           409:
             description: returns NO_VESSEL if the vessel is not already in the system
     """

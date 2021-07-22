@@ -33,6 +33,6 @@ flask db migrate
 echo db upgrade
 flask db upgrade
 
-pytest
+pytest -v
 
 flask run -h 0.0.0.0 -p 5000

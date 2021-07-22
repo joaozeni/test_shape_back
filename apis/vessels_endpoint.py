@@ -23,6 +23,8 @@ def insert_vessel():
             description: returns OK if the vessel was correctly inserted
           400:
             description: returns MISSING_PARAMETER if the vessel code is not sent
+          400:
+            description: returns WRONG_FORMAT if any parameter are sent in the wrong format
           409:
             description: returns FAIL if the vessel code is already in the system
     """
@@ -31,6 +33,10 @@ def insert_vessel():
         return {'message':'MISSING_PARAMETER'}, 400
     
     code = req_json.get('code')
+    
+    if type(code) != str:
+        return {'message':'WRONG_FORMAT'}, 400
+    
     in_the_system = db.session.query(vessel.id).filter(vessel.code==code).count()
     
     if in_the_system:

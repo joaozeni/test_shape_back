@@ -43,6 +43,15 @@ def test_insert_replicated(app):
         query_results = db.session.execute(query).all()
         assert query_results[0][0] == 1
 
+def test_insert_wrong_format(app):
+    result = app.test_client().post('/vessel/insert_vessel', json={'code':1})
+    assert result.get_json().get('message') == 'WRONG_FORMAT'
+    assert result.status_code == 400
+    with app.app_context():
+        query = db.session.query(func.count(vessel.code))
+        query_results = db.session.execute(query).all()
+        assert query_results[0][0] == 1
+
 def test_insert_without_code(app):
     result = app.test_client().post('/vessel/insert_vessel')
     assert result.get_json().get('message') == 'MISSING_PARAMETER'
