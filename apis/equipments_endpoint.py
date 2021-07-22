@@ -11,7 +11,6 @@ equipments_blueprint = Blueprint('equipments', __name__)
 
 @equipments_blueprint.route('/insert_equipment', methods=['POST'])
 def insert_equipment():
-
     """Insert a new equipment
         ---
         parameters:
@@ -67,7 +66,6 @@ def insert_equipment():
 
 @equipments_blueprint.route('/update_equipment_status', methods=['PUT'])
 def update_equipment_status():
-
     """Set a equipment or a list of those to inactive
         ---
         parameters:
@@ -76,7 +74,7 @@ def update_equipment_status():
               type: string
               required: true
         responses:
-          200:
+          201:
             description: returns OK if the equipments were correctly updated
           400:
             description: returns MISSING_PARAMETER if any parameter is not sent
@@ -100,3 +98,41 @@ def update_equipment_status():
     db.session.commit()
 
     return {'message':'OK'}, 201
+
+@equipments_blueprint.route('/active_equipments', methods=['GET'])
+def active_equipment():
+    """Return the list of active equipments of a vessel
+        ---
+        parameters:
+            - name: vessel_code
+              in: query
+              type: string
+              required: true
+        responses:
+          200:
+            description: returns a json with equipments key and a list of equipments
+          400:
+            description: returns MISSING_PARAMETER if the vessel_code is not sent
+          409:
+            description: returns NO_VESSEL if the vessel is not already in the system
+    """
+    req_args = request.args
+    if not req_args or not req_args.get('vessel_code'):
+        return {'message':'MISSING_PARAMETER'}, 400
+    
+    vessel_code = req_args.get('vessel_code')
+    
+    vessel_query = db.session.query(vessel.id).filter(vessel.code==vessel_code)
+    query_results = db.session.execute(vessel_query).all()
+    if not len(query_results):
+        return {'message':'NO_VESSEL'}, 409
+    
+    equipments = db.session.query(equipment).filter(equipment.vessel_id==query_results[0][0]).filter(equipment.active==True).all()
+
+    equipment_json = {'equipments':[]}
+
+    for equipment_obj in equipments:
+        equipment_json['equipments'].append({'code':equipment_obj.code, 'name':equipment_obj.name, 'location':equipment_obj.location})
+
+    return equipment_json, 200
+

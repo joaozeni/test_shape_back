@@ -170,3 +170,50 @@ def test_update_an_list_of_equipment(app):
         assert not query_results[0][0].active
         assert not query_results[1][0].active
 
+def test_get_list_of_active_one_equipment(app):
+    with app.app_context():
+        vessel_obj = vessel(code='MV103')
+        db.session.add(vessel_obj)
+        db.session.commit()
+        equipment_obj = equipment(vessel_id=3, code='5310B9D1', location='brazil', name='compressor', active=True)
+        db.session.add(equipment_obj)
+        db.session.commit()
+
+    result = app.test_client().get('/equipment/active_equipments?vessel_code=MV103')
+    assert len(result.get_json().get('equipments')) == 1
+    assert result.get_json().get('equipments')[0].get('code') == '5310B9D1'
+    assert result.get_json().get('equipments')[0].get('name') == 'compressor'
+    assert result.get_json().get('equipments')[0].get('location') == 'brazil'
+    assert result.status_code == 200
+
+def test_get_list_of_active_two_equipment(app):
+    with app.app_context():
+        equipment_obj = equipment(vessel_id=3, code='5310B9D2', location='china', name='motor', active=True)
+        db.session.add(equipment_obj)
+        db.session.commit()
+
+    result = app.test_client().get('/equipment/active_equipments?vessel_code=MV103')
+    assert len(result.get_json().get('equipments')) == 2
+    assert result.get_json().get('equipments')[0].get('code') == '5310B9D1'
+    assert result.get_json().get('equipments')[0].get('name') == 'compressor'
+    assert result.get_json().get('equipments')[0].get('location') == 'brazil'
+    assert result.get_json().get('equipments')[1].get('code') == '5310B9D2'
+    assert result.get_json().get('equipments')[1].get('name') == 'motor'
+    assert result.get_json().get('equipments')[1].get('location') == 'china'
+    assert result.status_code == 200
+
+def test_get_list_of_active_equipment_no_vessel(app):
+    result = app.test_client().get('/equipment/active_equipments?vessel_code=MV105')
+    assert result.get_json().get('message') == 'NO_VESSEL'
+    assert result.status_code == 409
+
+def test_get_list_of_active_equipment_no_parameter(app):
+    result = app.test_client().get('/equipment/active_equipments')
+    assert result.get_json().get('message') == 'MISSING_PARAMETER'
+    assert result.status_code == 400
+
+def test_get_list_no_active_equipment_vessel(app):
+    result = app.test_client().get('/equipment/active_equipments?vessel_code=MV102')
+    assert len(result.get_json().get('equipments')) == 0
+    assert result.status_code == 200
+
